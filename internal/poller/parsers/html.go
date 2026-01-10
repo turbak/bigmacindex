@@ -15,6 +15,13 @@ func (p HTMLParser) ParsePriceStringFromReader(reader io.Reader, priceSelector s
 		return "", err
 	}
 
+	res, err := io.ReadAll(reader)
+	if err != nil {
+		return "", err
+	}
+
+	_ = res
+
 	node := htmlquery.FindOne(doc, priceSelector)
 	if node == nil {
 		return "", fmt.Errorf("no price found for XPath '%s'", priceSelector)

@@ -19,7 +19,7 @@ type LinksLister interface {
 }
 
 type PricesUpserter interface {
-	UpsertPrice(ctx context.Context, priceRec price.PriceRecord) error
+	UpsertPrice(ctx context.Context, priceRec price.PriceRecord) (price.PriceRecord, error)
 }
 
 type poller struct {
@@ -56,7 +56,7 @@ func (p *poller) Poll(ctx context.Context) error {
 
 		log.Printf("Fetched price for %s: %d.%02d %s", priceRec.ProductName, priceRec.Price, priceRec.PriceCents, priceRec.Currency)
 
-		err = p.pricesUpserter.UpsertPrice(ctx, priceRec)
+		_, err = p.pricesUpserter.UpsertPrice(ctx, priceRec)
 		if err != nil {
 			return err
 		}
