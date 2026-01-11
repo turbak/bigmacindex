@@ -23,7 +23,9 @@ func main() {
 	linksRepo := links.NewRepository(db)
 	pricesRepo := prices.NewRepository(db)
 
-	pricesApp := app.NewApp(linksRepo, pricesRepo)
+	linksRoutes := app.NewLinksRoutes(linksRepo)
+
+	pricesApp := app.NewApp(linksRoutes, pricesRepo)
 
 	if err := pricesApp.SetupRoutes(ctx); err != nil {
 		log.Fatalf("failed to set up routes: %v", err)

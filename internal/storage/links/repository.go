@@ -63,3 +63,34 @@ func (r *repository) ListLinks(ctx context.Context) ([]link.LinkDescription, err
 	}
 	return linkDescs, nil
 }
+
+func (r *repository) UpdateLink(ctx context.Context, linkDesc link.LinkDescription) (link.LinkDescription, error) {
+	_, err := r.db.Update(tableName).
+		Set("url", linkDesc.URL).
+		Set("link_type", linkDesc.LinkType).
+		Set("price_selector", linkDesc.PriceSelector).
+		Set("country_code", linkDesc.CountryCode).
+		Set("product_name", linkDesc.ProductName).
+		Where(squirrel.Eq{"id": linkDesc.ID}).
+		ExecContext(ctx)
+	if err != nil {
+		return link.LinkDescription{}, err
+	}
+
+	return linkDesc, nil
+}
+
+func (r *repository) GetLinkByID(ctx context.Context, ID link.ID) (link.LinkDescription, error) {
+	row := r.db.Select("id", "url", "link_type", "price_selector", "country_code", "product_name").
+		From(tableName).
+		Where(squirrel.Eq{"id": ID}).
+		QueryRowContext(ctx)
+
+	var linkDesc link.LinkDescription
+	err := row.Scan(&linkDesc.ID, &linkDesc.URL, &linkDesc.LinkType, &linkDesc.PriceSelector, &linkDesc.CountryCode, &linkDesc.ProductName)
+	if err != nil {
+		return link.LinkDescription{}, err
+	}
+
+	return linkDesc, nil
+}

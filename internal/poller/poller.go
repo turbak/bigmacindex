@@ -54,7 +54,7 @@ func (p *poller) Poll(ctx context.Context) error {
 			return err
 		}
 
-		log.Printf("Fetched price for %s: %d.%02d %s", priceRec.ProductName, priceRec.Price, priceRec.PriceCents, priceRec.Currency)
+		log.Printf("Fetched price for %s: %d.%02d in %s", priceRec.ProductName, priceRec.Price, priceRec.PriceCents, priceRec.CountryCode)
 
 		_, err = p.pricesUpserter.UpsertPrice(ctx, priceRec)
 		if err != nil {

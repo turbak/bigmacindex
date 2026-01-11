@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Link Manager</title>
+    <title>Big Mac Index</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -12,13 +12,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style> body { font-family: 'Inter', sans-serif; } </style>
 </head>
+
+<div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 w-full max-w-sm"></div>
+
 <body class="bg-gray-50 text-gray-800 antialiased">
 
 <nav class="bg-white border-b border-gray-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex items-center">
-                <span class="text-xl font-bold text-indigo-600">LinkScraper<span class="text-gray-900">IO</span></span>
+                <span class="text-xl font-bold text-indigo-600">BigMacIndex</span>
             </div>
         </div>
     </div>
@@ -65,16 +68,6 @@
                 </button>
             </div>
         </form>
-    </div>
-
-    <div class="mb-4 max-w-sm">
-        <input type="text"
-               name="search"
-               class="block w-full rounded-md border-gray-300 pl-4 py-2 border shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-               placeholder="Search products..."
-               hx-get="/links/search"
-               hx-trigger="keyup changed delay:500ms"
-               hx-target="#link-table-body">
     </div>
 
     <div class="bg-white shadow overflow-hidden sm:rounded-lg border border-gray-200">
@@ -126,13 +119,26 @@
         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">{{ .LinkType }}</span>
         {{ end }}
     </td>
-    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-        <code class="bg-gray-100 px-2 py-1 rounded text-xs text-pink-600 border border-gray-200">{{ .PriceSelector }}</code>
+
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 max-w-[12rem]">
+        <div class="truncate" title="{{ .PriceSelector }}">
+            <code class="bg-gray-100 px-2 py-1 rounded text-xs text-pink-600 border border-gray-200 cursor-help">
+                {{ .PriceSelector }}
+            </code>
+        </div>
     </td>
+
     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
         <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium bg-blue-50 text-blue-800">{{ .CountryCode }}</span>
     </td>
-    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+        <button
+                hx-get="/links/{{ .ID }}/edit"
+                hx-target="closest tr"
+                hx-swap="outerHTML"
+                class="text-indigo-600 hover:text-indigo-900 transition-colors duration-200">
+            Edit
+        </button>
         <button
                 hx-delete="/links/{{ .ID }}"
                 hx-confirm="Are you sure you want to delete {{ .ProductName }}?"
@@ -140,6 +146,56 @@
                 hx-swap="outerHTML"
                 class="text-red-600 hover:text-red-900 transition-colors duration-200">
             Delete
+        </button>
+    </td>
+</tr>
+{{ end }}
+
+{{ define "link-row-edit" }}
+<tr class="bg-indigo-50/50 ring-1 ring-inset ring-indigo-200">
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        #{{ .ID }}
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap">
+        <div class="flex flex-col gap-2">
+            <input type="text" name="product_name" value="{{ .ProductName }}"
+                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm p-1">
+            <input type="url" name="url" value="{{ .URL }}"
+                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs p-1">
+        </div>
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap">
+        <select name="link_type" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm p-1">
+            <option value="html" {{ if eq .LinkType "html" }}selected{{ end }}>HTML</option>
+            <option value="json" {{ if eq .LinkType "json" }}selected{{ end }}>JSON</option>
+            <option value="regex" {{ if eq .LinkType "regex" }}selected{{ end }}>Regex</option>
+        </select>
+    </td>
+
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 max-w-[12rem]">
+        <input type="text" name="price_selector" value="{{ .PriceSelector }}"
+               class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm p-1 font-mono">
+    </td>
+
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        <input type="text" name="country_code" value="{{ .CountryCode }}"
+               class="block w-20 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm p-1">
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+        <button
+                hx-put="/links/{{ .ID }}"
+                hx-include="closest tr"
+                hx-target="closest tr"
+                hx-swap="outerHTML"
+                class="text-green-600 hover:text-green-900 font-bold transition-colors duration-200">
+            Save
+        </button>
+        <button
+                hx-get="/links/{{ .ID }}"
+                hx-target="closest tr"
+                hx-swap="outerHTML"
+                class="text-gray-500 hover:text-gray-700 transition-colors duration-200">
+            Cancel
         </button>
     </td>
 </tr>
